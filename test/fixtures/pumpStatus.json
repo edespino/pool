@@ -1,0 +1,17 @@
+{
+  "pumpType": 3,
+  "isRunning": false,
+  "pumpRPMs": 0,
+  "pumpWatts": 0,
+  "pumpGPMs": 0,
+  "pumpCircuits": [
+    { "circuitId": 6, "speed": 2600, "isRPMs": true },
+    { "circuitId": 1, "speed": 3450, "isRPMs": true },
+    { "circuitId": 2, "speed": 2400, "isRPMs": true },
+    { "circuitId": 130, "speed": 2700, "isRPMs": true },
+    { "circuitId": 132, "speed": 610, "isRPMs": true },
+    { "circuitId": 7, "speed": 2750, "isRPMs": true },
+    { "circuitId": 9, "speed": 3450, "isRPMs": true },
+    { "circuitId": 0, "speed": 1000, "isRPMs": true }
+  ]
+}

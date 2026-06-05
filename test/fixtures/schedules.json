@@ -1,0 +1,8 @@
+{
+  "recurring": [
+    { "scheduleId": 1, "circuitId": 6, "startTime": "0900", "stopTime": "1300", "dayMask": 127, "flags": 0, "heatCmd": 4, "heatSetPoint": 70, "days": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] },
+    { "scheduleId": 2, "circuitId": 2, "startTime": "0930", "stopTime": "1130", "dayMask": 127, "flags": 0, "heatCmd": 4, "heatSetPoint": 70, "days": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] },
+    { "scheduleId": 4, "circuitId": 5, "startTime": "2100", "stopTime": "0030", "dayMask": 127, "flags": 0, "heatCmd": 4, "heatSetPoint": 70, "days": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] }
+  ],
+  "runOnce": []
+}

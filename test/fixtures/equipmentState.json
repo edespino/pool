@@ -1,0 +1,15 @@
+{
+  "airTemp": 78,
+  "bodies": [
+    { "id": 1, "currentTemp": 65, "setPoint": 84, "heatStatus": 0, "heatMode": 0 },
+    { "id": 2, "currentTemp": 102, "setPoint": 102, "heatStatus": 1, "heatMode": 1 }
+  ],
+  "circuitArray": [
+    { "id": 500, "state": 0 },
+    { "id": 501, "state": 1 },
+    { "id": 502, "state": 1 }
+  ],
+  "pH": 7.4,
+  "orp": 700,
+  "saltPPM": 3200
+}

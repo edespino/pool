@@ -1,0 +1,7 @@
+{
+  "circuitArray": [
+    { "circuitId": 500, "name": "Pool", "function": 2, "deviceId": 6 },
+    { "circuitId": 501, "name": "Spa", "function": 1, "deviceId": 1 },
+    { "circuitId": 502, "name": "Pool Light", "function": 16, "deviceId": 7 }
+  ]
+}

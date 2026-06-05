@@ -1,0 +1,20 @@
+{
+  "name": "pentair-pool-controller",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "discover": "node bin/discover.js",
+    "capture": "node bin/capture.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-screenlogic": "^2.0.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  }
+}
