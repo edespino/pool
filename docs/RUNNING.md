@@ -55,9 +55,11 @@ pm2 save
 pm2 startup        # run the sudo command it prints, to start at boot
 ```
 
-### Option B — launchd LaunchAgent
-Save as `~/Library/LaunchAgents/com.espino.pool.plist`, then
-`launchctl load ~/Library/LaunchAgents/com.espino.pool.plist`:
+### Option B — launchd LaunchAgent (the active setup)
+
+Save as `~/Library/LaunchAgents/com.espino.pool.plist`. **launchd does not expand `~`** — use
+**absolute** paths (replace `~` below with your real home, e.g. `/Users/you/...`, and the
+`node` path with your `which node`):
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -66,7 +68,7 @@ Save as `~/Library/LaunchAgents/com.espino.pool.plist`, then
   <key>Label</key><string>com.espino.pool</string>
   <key>ProgramArguments</key>
   <array>
-    <string>~/.nvm/versions/node/v22.12.0/bin/node</string>
+    <string>~/.nvm/versions/node/vNN.NN.N/bin/node</string>
     <string>~/workspace/pool/src/index.js</string>
   </array>
   <key>WorkingDirectory</key><string>~/workspace/pool</string>
@@ -77,8 +79,23 @@ Save as `~/Library/LaunchAgents/com.espino.pool.plist`, then
 </dict>
 </plist>
 ```
-(The `processGuards` unhandled-rejection guard already keeps the process alive through the
-node-screenlogic teardown quirk; pm2/launchd add boot-start + restart-on-exit.)
+
+Load and manage it (`gui/$(id -u)` targets your login session):
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.espino.pool.plist   # load + start
+launchctl kickstart -k gui/$(id -u)/com.espino.pool                              # restart (e.g. after a git pull)
+launchctl print     gui/$(id -u)/com.espino.pool                                 # status (state =, pid =)
+launchctl bootout   gui/$(id -u)/com.espino.pool                                 # stop / unload
+```
+Logs: `~/workspace/pool/pool.log`.
+
+Notes:
+- The `processGuards` unhandled-rejection guard keeps the process alive through the
+  node-screenlogic teardown quirk; launchd adds login-start + restart-on-exit.
+- It's a **LaunchAgent**, so it runs while you're **logged in** (fine for an always-on Mac);
+  combine with sleep disabled (above) for 24/7.
+- The plist **pins the nvm node path** — if you upgrade Node via nvm, update the `node` path
+  in the plist and `kickstart -k`.
 
 ## Configuration (env vars)
 
