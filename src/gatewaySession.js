@@ -19,6 +19,7 @@ export function createSession({ config, discover, adapter }) {
   const emitter = new EventEmitter();
   const baseDelayMs = config.baseDelayMs ?? 1000;
   const maxDelayMs = config.maxDelayMs ?? 30000;
+  const configRefreshMs = config.configRefreshMs ?? 60000;
 
   let stopped = false;
   let pollTimer = null;
@@ -27,6 +28,7 @@ export function createSession({ config, discover, adapter }) {
   let gateway = null;
   let controllerConfig = null;
   let schedules = [];
+  let lastConfigRefresh = 0;
 
   function backoff(attempt) {
     return Math.min(maxDelayMs, baseDelayMs * 2 ** attempt);
@@ -46,8 +48,25 @@ export function createSession({ config, discover, adapter }) {
     if (emitter.listenerCount('error') > 0) emitter.emit('error', err);
   }
 
+  // Controller config + schedules are cached at connect; periodically re-fetch them
+  // (best-effort) so external edits — circuit renames/adds, schedule changes — show up
+  // without a reconnect. Keep last-known values on failure.
+  async function maybeRefreshConfig() {
+    if (Date.now() - lastConfigRefresh < configRefreshMs) return;
+    lastConfigRefresh = Date.now();
+    try {
+      controllerConfig = await adapter.getControllerConfig(conn);
+      const raw = await adapter.getSchedules(conn);
+      schedules = normalizeSchedules(raw.recurring, raw.runOnce, controllerConfig);
+    } catch {
+      // keep last-known config/schedules this cycle
+    }
+  }
+
   async function pollOnce() {
     const state = await adapter.getEquipmentState(conn);
+    if (stopped) return;
+    await maybeRefreshConfig();
     if (stopped) return;
     const status = normalizeStatus(controllerConfig, state);
     status.gateway = {
@@ -112,6 +131,7 @@ export function createSession({ config, discover, adapter }) {
       } catch {
         schedules = [];
       }
+      lastConfigRefresh = Date.now(); // start the periodic-refresh clock from connect
       emitter.emit('connected', gateway);
       await pollOnce();
       scheduleNextPoll();

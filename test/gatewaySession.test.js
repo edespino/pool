@@ -133,6 +133,40 @@ test('sendCommand rejects when not connected', async () => {
   session.stop();
 });
 
+test('periodically re-fetches config + schedules so external edits appear without reconnect', async () => {
+  const d = deps();
+  d.config.configRefreshMs = 1; // refresh on essentially every poll
+  let circuitName = 'Pool';
+  let startTime = '0900';
+  d.adapter.getControllerConfig = async () => ({ circuitArray: [{ circuitId: 500, name: circuitName }] });
+  d.adapter.getSchedules = async () => ({ recurring: [{ scheduleId: 1, circuitId: 500, startTime, stopTime: '1300', days: ['Mon'] }], runOnce: [] });
+  const session = createSession(d);
+  const [first] = await once(session, 'status');
+  assert.equal(first.circuits[0].name, 'Pool');
+  assert.equal(first.schedules[0].start, '9:00 AM');
+  const beforeConnects = d.calls.connects;
+
+  // Simulate external edits in the ScreenLogic app (rename a circuit, change a schedule).
+  circuitName = 'Pool Pump';
+  startTime = '0800';
+  const updated = await Promise.race([
+    new Promise((resolve) => {
+      function onStatus(s) {
+        if (s.circuits[0]?.name === 'Pool Pump' && s.schedules[0]?.start === '8:00 AM') {
+          session.off('status', onStatus);
+          resolve(s);
+        }
+      }
+      session.on('status', onStatus);
+    }),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('config/schedules did not refresh')), 500)),
+  ]);
+  assert.equal(updated.circuits[0].name, 'Pool Pump');
+  assert.equal(updated.schedules[0].start, '8:00 AM');
+  assert.equal(d.calls.connects, beforeConnects, 'must refresh in-place, no reconnect');
+  session.stop();
+});
+
 test('pump-status failure omits pump but still emits status', async () => {
   const d = deps();
   d.adapter.getPumpStatus = async () => { throw new Error('no pump'); };
