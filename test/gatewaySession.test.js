@@ -36,9 +36,18 @@ function deps(overrides = {}) {
   };
 }
 
-test('emits a normalized status after connecting', async () => {
-  const d = deps();
+// Create a session and guarantee it's stopped after the test — even if an assertion
+// throws first. Without this, a failed test leaks the session's poll timer and hangs
+// the test runner (an idle event loop that never exits).
+function startSession(t, d) {
   const session = createSession(d);
+  t.after(() => session.stop());
+  return session;
+}
+
+test('emits a normalized status after connecting', async (t) => {
+  const d = deps();
+  const session = startSession(t, d);
   const [status] = await once(session, 'status');
   assert.equal(status.air.tempF, 80);
   assert.equal(status.gateway.connected, true);
@@ -50,25 +59,23 @@ test('emits a normalized status after connecting', async () => {
   ]);
   assert.equal(status.pump.model, 'IntelliFlo VS');
   assert.deepEqual(status.pump.presets, [{ circuitId: 500, circuit: 'Pool', rpm: 2600 }]);
-  session.stop();
 });
 
-test('reconnects after a connect failure and eventually emits status', async () => {
+test('reconnects after a connect failure and eventually emits status', async (t) => {
   const d = deps();
   let fail = 2;
   d.adapter.connect = async () => {
     if (fail-- > 0) throw new Error('connection refused');
     return { id: 'conn' };
   };
-  const session = createSession(d);
+  const session = startSession(t, d);
   const [status] = await once(session, 'status');
   assert.equal(status.air.tempF, 80);
-  session.stop();
 });
 
-test('stop() halts polling and emits no further status', async () => {
+test('stop() halts polling and emits no further status', async (t) => {
   const d = deps();
-  const session = createSession(d);
+  const session = startSession(t, d);
   await once(session, 'status');
   session.stop();
   let fired = false;
@@ -77,7 +84,7 @@ test('stop() halts polling and emits no further status', async () => {
   assert.equal(fired, false);
 });
 
-test('recovers from a mid-poll failure by reconnecting', async () => {
+test('recovers from a mid-poll failure by reconnecting', async (t) => {
   const d = deps();
   let poll = 0;
   d.adapter.getEquipmentState = async () => {
@@ -85,62 +92,57 @@ test('recovers from a mid-poll failure by reconnecting', async () => {
     if (poll === 2) throw new Error('poll failed');
     return { airTemp: 80, bodies: [], circuitArray: [{ id: 500, state: 1 }], pH: 0 };
   };
-  const session = createSession(d);
+  const session = startSession(t, d);
   session.on('error', () => {}); // mid-poll failure emits 'error'; absorb it
   await once(session, 'status');           // first poll succeeds
   const before = d.calls.connects;
   const status = await new Promise((resolve) => session.on('status', resolve));
   assert.equal(status.air.tempF, 80);      // emitted again after reconnect
   assert.ok(d.calls.connects > before);    // a new connection was established
-  session.stop();
 });
 
-test('schedule fetch failure leaves schedules empty but still emits status', async () => {
+test('schedule fetch failure leaves schedules empty but still emits status', async (t) => {
   const d = deps();
   d.adapter.getSchedules = async () => { throw new Error('no schedules'); };
-  const session = createSession(d);
+  const session = startSession(t, d);
   const [status] = await once(session, 'status');
   assert.deepEqual(status.schedules, []);
   assert.equal(status.air.tempF, 80);
-  session.stop();
 });
 
-test('system-time failure omits systemTime but still emits status', async () => {
+test('system-time failure omits systemTime but still emits status', async (t) => {
   const d = deps();
   d.adapter.getSystemTime = async () => { throw new Error('no time'); };
-  const session = createSession(d);
+  const session = startSession(t, d);
   const [status] = await once(session, 'status');
   assert.equal(status.systemTime, undefined);
   assert.equal(status.air.tempF, 80);
-  session.stop();
 });
 
-test('sendCommand runs the fn on the live connection when connected', async () => {
+test('sendCommand runs the fn on the live connection when connected', async (t) => {
   const d = deps();
   let received = null;
-  const session = createSession(d);
+  const session = startSession(t, d);
   await once(session, 'status'); // now connected
   const result = await session.sendCommand((conn) => { received = conn; return 'ok'; });
   assert.equal(result, 'ok');
   assert.deepEqual(received, { id: 'conn' });
-  session.stop();
 });
 
-test('sendCommand rejects when not connected', async () => {
+test('sendCommand rejects when not connected', async (t) => {
   const d = deps();
-  const session = createSession(d); // connect is async; conn not established yet
+  const session = startSession(t, d); // connect is async; conn not established yet
   await assert.rejects(() => session.sendCommand(() => 'x'), /not connected/i);
-  session.stop();
 });
 
-test('periodically re-fetches config + schedules so external edits appear without reconnect', async () => {
+test('periodically re-fetches config + schedules so external edits appear without reconnect', async (t) => {
   const d = deps();
   d.config.configRefreshMs = 1; // refresh on essentially every poll
   let circuitName = 'Pool';
   let startTime = '0900';
   d.adapter.getControllerConfig = async () => ({ circuitArray: [{ circuitId: 500, name: circuitName }] });
   d.adapter.getSchedules = async () => ({ recurring: [{ scheduleId: 1, circuitId: 500, startTime, stopTime: '1300', days: ['Mon'] }], runOnce: [] });
-  const session = createSession(d);
+  const session = startSession(t, d);
   const [first] = await once(session, 'status');
   assert.equal(first.circuits[0].name, 'Pool');
   assert.equal(first.schedules[0].start, '9:00 AM');
@@ -164,15 +166,13 @@ test('periodically re-fetches config + schedules so external edits appear withou
   assert.equal(updated.circuits[0].name, 'Pool Pump');
   assert.equal(updated.schedules[0].start, '8:00 AM');
   assert.equal(d.calls.connects, beforeConnects, 'must refresh in-place, no reconnect');
-  session.stop();
 });
 
-test('pump-status failure omits pump but still emits status', async () => {
+test('pump-status failure omits pump but still emits status', async (t) => {
   const d = deps();
   d.adapter.getPumpStatus = async () => { throw new Error('no pump'); };
-  const session = createSession(d);
+  const session = startSession(t, d);
   const [status] = await once(session, 'status');
   assert.equal(status.pump, undefined);
   assert.equal(status.air.tempF, 80);
-  session.stop();
 });
