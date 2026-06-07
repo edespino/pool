@@ -69,6 +69,10 @@
     .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .seclabel { text-transform:uppercase; letter-spacing:.08em; font-size:11px; color:#8b98a5; margin:8px 4px 0; }
     .infogrid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:6px; }
+    .kv { padding:.45rem 0; border-top:1px solid rgba(255,255,255,.06); }
+    .kv:first-of-type { border-top:none; }
+    .kv .k { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#8b98a5; margin-bottom:1px; }
+    .kv .v { display:block; }
     .tile.heating { box-shadow:0 0 0 2px rgba(239,68,68,.95), 0 0 30px 5px rgba(239,68,68,.6); animation: heatpulse 2.6s ease-in-out infinite; }
     @keyframes heatpulse { 0%,100% { box-shadow:0 0 0 2px rgba(239,68,68,.8), 0 0 22px 3px rgba(239,68,68,.45);} 50% { box-shadow:0 0 0 2px rgba(239,68,68,1), 0 0 40px 8px rgba(239,68,68,.8);} }
     .heatchip { border:none; border-radius:999px; padding:6px 12px; font-weight:700; font-size:13px; cursor:pointer; color:#fff; }

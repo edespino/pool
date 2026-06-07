@@ -215,9 +215,11 @@ function renderDetails(s) {
     ['Status', g.connected ? '<span class="on">Connected</span>' : '<span class="off">Disconnected</span>'],
     ['Controller clock', s.systemTime?.clock ? clock12h(s.systemTime.clock.slice(11)) : '—'],
   ];
-  const rows = (pairs) => pairs.map(([k, v]) => `<li><span class="off">${k}</span><span>${v}</span></li>`).join('');
-  viewDetails.innerHTML = `<div class="card"><h2>Connection</h2><ul>${rows(conn)}</ul></div>
-    <div class="card"><h2>Equipment</h2><ul>${rows(EQUIPMENT)}</ul></div>`;
+  const rows = (pairs) => pairs.map(([k, v]) => `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+  viewDetails.innerHTML = `<div class="ctl">
+    <div class="card"><h2>Connection</h2>${rows(conn)}</div>
+    <div class="card"><h2>Equipment</h2>${rows(EQUIPMENT)}</div>
+  </div>`;
 }
 
 function renderPumps(s) {
