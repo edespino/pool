@@ -141,7 +141,7 @@ function bodyTile(s, role, name, icon, glowClass) {
   // Derive the schedule badge from the live schedule for this body's circuit (compact hours),
   // so it refreshes when the schedule changes instead of showing a hardcoded value.
   const sched = (s.schedules || []).find((x) => x.circuit?.toLowerCase() === name.toLowerCase());
-  const scheduleBadge = sched ? `${sched.start.split(':')[0]}–${sched.stop.split(':')[0]}` : '';
+  const scheduleBadge = sched ? `${sched.start}–${sched.stop}` : '';
   const cls = `tile ${heating ? 'heating' : (on ? glowClass : 'off')}${isPending ? ' pending' : ''}`;
   const toggle = confirming.has(role)
     ? `<span><button class="cbtn confirm" data-act="toggle" data-role="${role}" data-name="${name}" data-on="${on}">✓ Turn on</button> <button class="cbtn cancel" data-act="cancelconfirm" data-role="${role}">Cancel</button></span>`
