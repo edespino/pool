@@ -129,7 +129,7 @@ function heaterRow(s) {
 }
 
 // ---- rendering ----
-function bodyTile(s, role, name, icon, glowClass, scheduleBadge) {
+function bodyTile(s, role, name, icon, glowClass) {
   const c = circuit(s, name);
   if (!c || !s[role]) return '';
   const on = isOn(role, c.on);
@@ -138,6 +138,10 @@ function bodyTile(s, role, name, icon, glowClass, scheduleBadge) {
   const body = role === 'pool' ? 'pool' : 'spa';
   const setVal = setEdit.has(body) ? setEdit.get(body) : s[role].setpointF;
   const heating = !!s[role].heaterOn;
+  // Derive the schedule badge from the live schedule for this body's circuit (compact hours),
+  // so it refreshes when the schedule changes instead of showing a hardcoded value.
+  const sched = (s.schedules || []).find((x) => x.circuit?.toLowerCase() === name.toLowerCase());
+  const scheduleBadge = sched ? `${sched.start.split(':')[0]}–${sched.stop.split(':')[0]}` : '';
   const cls = `tile ${heating ? 'heating' : (on ? glowClass : 'off')}${isPending ? ' pending' : ''}`;
   const toggle = confirming.has(role)
     ? `<span><button class="cbtn confirm" data-act="toggle" data-role="${role}" data-name="${name}" data-on="${on}">✓ Turn on</button> <button class="cbtn cancel" data-act="cancelconfirm" data-role="${role}">Cancel</button></span>`
@@ -186,9 +190,9 @@ function yardTile(s) {
 
 function renderControl(s) {
   const tiles = [
-    bodyTile(s, 'pool', 'Pool', '🏊', GLOW.pool, '9–1'),
+    bodyTile(s, 'pool', 'Pool', '🏊', GLOW.pool),
     featureTile(s, 'spillway', 'Spillway', '⛲', GLOW.spillway),
-    bodyTile(s, 'spa', 'Spa', '♨️', GLOW.spa, ''),
+    bodyTile(s, 'spa', 'Spa', '♨️', GLOW.spa),
     '<div class="seclabel">Lights</div>',
     yardTile(s),
     `<div class="row2">${lightTile(s, 'poolLight', 'Pool Light', '💡')}${lightTile(s, 'spaLight', 'Spa Light', '💡')}</div>`,
