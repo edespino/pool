@@ -147,7 +147,7 @@ function bodyTile(s, role, name, icon, glowClass) {
     ? `<span><button class="cbtn confirm" data-act="toggle" data-role="${role}" data-name="${name}" data-on="${on}">✓ Turn on</button> <button class="cbtn cancel" data-act="cancelconfirm" data-role="${role}">Cancel</button></span>`
     : `<button class="pill" data-act="toggle" data-role="${role}" data-name="${name}" data-on="${on}"><span class="dot ${on ? 'on' : ''}"></span> ${on ? 'ON' : 'OFF'}</button>`;
   return `<div class="${cls}">
-    <div class="lblrow"><span class="ico">${icon}</span><span class="lbl">${name}</span>${scheduleBadge ? `<span class="sbadge">⏱ ${scheduleBadge}</span>` : ''}</div>
+    <div class="lblrow"><span class="ico">${icon}</span><div><span class="lbl">${name}</span>${scheduleBadge ? `<div style="font-size:12px;opacity:.85;margin-top:2px;">⏱ ${scheduleBadge}</div>` : ''}</div></div>
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px;"><div class="temp">${s[role].tempF}&deg;</div>${toggle}</div>
     <div style="margin-top:12px;"><span class="stepper"><button data-act="setdn" data-body="${body}" data-cur="${setVal}">−</button><b>${setVal}&deg;</b><button data-act="setup" data-body="${body}" data-cur="${setVal}">+</button></span>
       ${editing ? `<button class="cbtn confirm" data-act="applyset" data-body="${body}" style="margin-left:10px;">Apply ${setVal}&deg;</button>` : ''}</div>
